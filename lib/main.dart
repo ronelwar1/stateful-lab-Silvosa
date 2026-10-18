@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// Starts the application and opens the shopping cart screen.
 void main() => runApp(
   const MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -7,6 +8,7 @@ void main() => runApp(
   ),
 );
 
+// Plain data class: quantity and gotIt are not final, so they can change.
 class CartItem {
   final String name;
   final double price;
@@ -21,6 +23,7 @@ class CartItem {
   });
 }
 
+// Stateful because the cart changes while the app runs.
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
@@ -28,12 +31,14 @@ class CartScreen extends StatefulWidget {
   State<CartScreen> createState() => _CartScreenState();
 }
 
+// The State class owns the item list and the text controllers.
 class _CartScreenState extends State<CartScreen> {
   final List<CartItem> _items = [];
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
 
+  // Runs once when the screen is created: preloads the 3 sample items.
   @override
   void initState() {
     super.initState();
@@ -45,6 +50,7 @@ class _CartScreenState extends State<CartScreen> {
     ]);
   }
 
+  // Releases both text controllers when the screen is removed.
   @override
   void dispose() {
     _nameController.dispose();
@@ -52,6 +58,7 @@ class _CartScreenState extends State<CartScreen> {
     super.dispose();
   }
 
+  // Increases the item quantity but stops at 99.
   void _increase(int i) {
     if (_items[i].quantity < 99) {
       setState(() {
@@ -60,6 +67,7 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
+  // Decreases the item quantity but never goes below 1.
   void _decrease(int i) {
     if (_items[i].quantity > 1) {
       setState(() {
@@ -68,18 +76,21 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
+  // Marks an item as purchased or unmarks it when tapped again.
   void _toggle(int i) {
     setState(() {
       _items[i].gotIt = !_items[i].gotIt;
     });
   }
 
+  // Removes all checked items from the shopping cart.
   void _clearChecked() {
     setState(() {
       _items.removeWhere((item) => item.gotIt);
     });
   }
 
+  // Calculates the total price of all items based on their quantities.
   double get _total {
     double sum = 0;
 
@@ -90,14 +101,17 @@ class _CartScreenState extends State<CartScreen> {
     return sum;
   }
 
+  // Counts how many items are marked as purchased.
   int get _gotItCount {
     return _items.where((item) => item.gotIt).length;
   }
 
+  // Adds a new item after checking if the name and price are valid.
   void _addItem() {
     final name = _nameController.text.trim();
     final price = double.tryParse(_priceController.text.trim());
 
+    // Shows an error if the name is empty or the price is invalid.
     if (name.isEmpty || price == null || !price.isFinite || price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -108,6 +122,7 @@ class _CartScreenState extends State<CartScreen> {
       return;
     }
 
+    // Updates the item list and refreshes the screen.
     setState(() {
       _items.add(
         CartItem(
@@ -117,11 +132,13 @@ class _CartScreenState extends State<CartScreen> {
       );
     });
 
+    // Clears the input fields after adding the item.
     _nameController.clear();
     _priceController.clear();
 
     FocusScope.of(context).unfocus();
 
+    // Displays a success message after adding an item.
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Item added successfully!'),
@@ -130,9 +147,11 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
+  // Builds the main shopping cart interface.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Displays the application title.
       appBar: AppBar(
         title: const Text('Mini Shopping Cart'),
         backgroundColor: Colors.blue,
@@ -143,7 +162,7 @@ class _CartScreenState extends State<CartScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Summary section
+            // Summary section: displays item count, checked count, and total.
             Container(
               padding: const EdgeInsets.all(16),
               color: Colors.blue.shade50,
@@ -171,6 +190,7 @@ class _CartScreenState extends State<CartScreen> {
 
                   const SizedBox(height: 10),
 
+                  // Displays the updated total price.
                   Text(
                     'Total: PHP ${_total.toStringAsFixed(2)}',
                     style: const TextStyle(
@@ -183,7 +203,7 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
 
-            // Shopping cart items
+            // Displays the shopping items using a scrollable list.
             Expanded(
               child: _items.isEmpty
                   ? const Center(
@@ -195,6 +215,7 @@ class _CartScreenState extends State<CartScreen> {
                   : ListView.builder(
                       itemCount: _items.length,
                       itemBuilder: (context, index) {
+                        // Passes item data and button actions to CartItemTile.
                         return CartItemTile(
                           item: _items[index],
                           onIncrease: () => _increase(index),
@@ -205,7 +226,7 @@ class _CartScreenState extends State<CartScreen> {
                     ),
             ),
 
-            // Clear checked button
+            // Button for removing all checked items.
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SizedBox(
@@ -220,11 +241,12 @@ class _CartScreenState extends State<CartScreen> {
 
             const Divider(),
 
-            // Add item form
+            // Form for entering a new item's name and price.
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  // Text field for the item name.
                   TextField(
                     controller: _nameController,
                     decoration: const InputDecoration(
@@ -237,6 +259,7 @@ class _CartScreenState extends State<CartScreen> {
 
                   const SizedBox(height: 10),
 
+                  // Text field for the item price.
                   TextField(
                     controller: _priceController,
                     keyboardType: const TextInputType.numberWithOptions(
@@ -252,6 +275,7 @@ class _CartScreenState extends State<CartScreen> {
 
                   const SizedBox(height: 10),
 
+                  // Button that calls _addItem to add a new item.
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -275,6 +299,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 }
 
+// Stateless because it only displays item data and sends actions to the parent.
 class CartItemTile extends StatelessWidget {
   final CartItem item;
   final VoidCallback onIncrease;
@@ -289,6 +314,7 @@ class CartItemTile extends StatelessWidget {
     required this.onToggle,
   });
 
+  // Builds the display for each shopping cart item.
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -297,11 +323,13 @@ class CartItemTile extends StatelessWidget {
         vertical: 5,
       ),
       child: ListTile(
+        // Checkbox for marking an item as purchased.
         leading: Checkbox(
           value: item.gotIt,
           onChanged: (_) => onToggle(),
         ),
 
+        // Displays the item name with a line-through when checked.
         title: Text(
           item.name,
           style: TextStyle(
@@ -312,10 +340,12 @@ class CartItemTile extends StatelessWidget {
           ),
         ),
 
+        // Displays the item's price with two decimal places.
         subtitle: Text(
           'PHP ${item.price.toStringAsFixed(2)}',
         ),
 
+        // Buttons for decreasing and increasing the item quantity.
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -324,6 +354,7 @@ class CartItemTile extends StatelessWidget {
               onPressed: onDecrease,
             ),
 
+            // Displays the current item quantity.
             Text(
               '${item.quantity}',
               style: const TextStyle(
